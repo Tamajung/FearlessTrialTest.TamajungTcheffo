@@ -23,30 +23,6 @@ resource "aws_apigatewayv2_stage" "dev" {
 
   name        = "dev"
   auto_deploy = true
-
-  access_log_settings {
-    destination_arn = aws_cloudwatch_log_group.main_api_gw.arn
-
-    format = jsonencode({
-      requestId               = "$context.requestId"
-      sourceIp                = "$context.identity.sourceIp"
-      requestTime             = "$context.requestTime"
-      protocol                = "$context.protocol"
-      httpMethod              = "$context.httpMethod"
-      resourcePath            = "$context.resourcePath"
-      routeKey                = "$context.routeKey"
-      status                  = "$context.status"
-      responseLength          = "$context.responseLength"
-      integrationErrorMessage = "$context.integrationErrorMessage"
-      }
-    )
-  }
-}
-
-resource "aws_cloudwatch_log_group" "main_api_gw" {
-  name = "/aws/api-gw/${aws_apigatewayv2_api.main.name}"
-
-  retention_in_days = 14
 }
 resource "aws_apigatewayv2_integration" "lambda_hello" {
   api_id = aws_apigatewayv2_api.main.id
@@ -61,15 +37,8 @@ resource "aws_apigatewayv2_route" "get_hello" {
 
   route_key = "GET /hello"
   target    = "integrations/${aws_apigatewayv2_integration.lambda_hello.id}"
+
 }
-
-resource "aws_apigatewayv2_route" "post_hello" {
-  api_id = aws_apigatewayv2_api.main.id
-
-  route_key = "POST /hello"
-  target    = "integrations/${aws_apigatewayv2_integration.lambda_hello.id}"
-}
-
 resource "aws_lambda_permission" "api_gw" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
